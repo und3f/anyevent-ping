@@ -20,7 +20,7 @@ subtest 'ping 127.0.0.1' => sub {
         '127.0.0.1',
         2,
         sub {
-            my ($ping, $lres) = @_;
+            my $lres = shift;
 
             $result = $lres;
 
@@ -41,7 +41,7 @@ subtest 'check two concurrent ping' => sub {
     my @res;
 
     my $ping_cb = sub {
-        my ($ping, $res) = @_;
+        my $res = shift;
         push @res, $res;
         $cv->send if @res >= 2;
     };

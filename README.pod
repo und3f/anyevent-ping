@@ -12,7 +12,7 @@ AnyEvent::Ping - ping hosts with AnyEvent
     my $ping = AnyEvent::Ping->new;
 
     $ping->ping('google.com', 1, sub {
-        my ($ping, $result) = @_;
+        my $result = shift;
         print "Result: ", $result->[0][0],
           " in ", $result->[0][1], " seconds\n";
         $c->send;
@@ -23,6 +23,41 @@ AnyEvent::Ping - ping hosts with AnyEvent
 =head1 DESCRIPTION
 
 L<AnyEvent::Ping> is an asynchronous AnyEvent pinger.
+
+=head1 ATTRIBUTES
+    AnyEvent::Ping implements the following attributes.
+
+=head2 C<interval>
+
+    my $interval = $ping->interval;
+    $ping->interval(1);
+
+Interval between pings, defaults to 0.2 seconds.
+
+=head2 C<timeout>
+    
+    my $timeout = $ping->timeout;
+    $ping->timeout(3);
+
+Maximum response time, defaults to 5 seconds.
+
+=head2 C<error>
+
+    my $error = $ping->error;
+
+Last error message.
+
+=head1 C<METHODS>
+
+L<AnyEvent::Ping> implements the following methods.
+
+=head2 C<ping>
+
+    $ping->ping($ip, $n => sub {
+        my $result = shift;
+    });
+
+Perform a ping of a given $ip address $n times.
 
 =head1 SEE ALSO
 
