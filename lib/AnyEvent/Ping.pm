@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 our $VERSION = 0.001;
-use base 'Mojo::Base';
 
 use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
