@@ -48,7 +48,7 @@ Maximum response time, defaults to 5 seconds.
 
 Last error message.
 
-=head1 C<METHODS>
+=head1 METHODS
 
 L<AnyEvent::Ping> implements the following methods.
 
