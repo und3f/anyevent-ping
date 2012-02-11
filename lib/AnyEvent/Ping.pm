@@ -2,6 +2,7 @@ package AnyEvent::Ping;
 
 use strict;
 use warnings;
+use 5.008_001;
 
 our $VERSION = 0.001;
 
@@ -338,6 +339,6 @@ Sergey Zasenko, C<undef@cpan.org>.
 Copyright (C) 2012, Sergey Zasenko
 
 This program is free software, you can redistribute it and/or modify it under
-the terms of the Artistic License version 2.0.
+the same terms as Perl.
 
 =cut
