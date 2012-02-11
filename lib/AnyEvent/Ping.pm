@@ -290,7 +290,8 @@ AnyEvent::Ping - ping hosts with AnyEvent
 L<AnyEvent::Ping> is an asynchronous AnyEvent pinger.
 
 =head1 ATTRIBUTES
-    AnyEvent::Ping implements the following attributes.
+
+L<AnyEvent::Ping> implements the following attributes.
 
 =head2 C<interval>
 
