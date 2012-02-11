@@ -4,3 +4,4 @@
 ^Makefile$
 ^\.git
 ^.perltidyrc
+README.pod

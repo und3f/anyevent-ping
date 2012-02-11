@@ -1,0 +1,41 @@
+=head1 NAME
+
+AnyEvent::Ping - ping hosts with AnyEvent
+
+=head1 SYNOPSIS
+
+    use AnyEvent;
+    use AnyEvent::Ping;
+
+    my $c = AnyEvent->condvar;
+
+    my $ping = AnyEvent::Ping->new;
+
+    $ping->ping('google.com', 1, sub {
+        my ($ping, $result) = @_;
+        print "Result: ", $result->[0][0],
+          " in ", $result->[0][1], " seconds\n";
+        $c->send;
+    });
+
+    $c->recv;
+
+=head1 DESCRIPTION
+
+L<AnyEvent::Ping> is an asynchronous AnyEvent pinger.
+
+=head1 SEE ALSO
+
+L<AnyEvent>, L<AnyEvent::FastPing>
+
+=head1 AUTHOR
+
+Sergey Zasenko, C<undef@cpan.org>.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2012, Sergey Zasenko
+
+This program is free software, you can redistribute it and/or modify it under
+the terms of the Artistic License version 2.0.
+
