@@ -1,0 +1,308 @@
+package AnyEvent::Ping;
+
+use strict;
+use warnings;
+
+our $VERSION = 0.001;
+use base 'Mojo::Base';
+
+use Socket qw/SOCK_RAW/;
+use Time::HiRes 'time';
+use IO::Socket::INET qw/sockaddr_in inet_aton/;
+use List::Util ();
+use AnyEvent::Handle;
+require Carp;
+
+my $ICMP_PING = 'ccnnnA*';
+
+my $ICMP_ECHOREPLY     = 0;     # Echo Reply
+my $ICMP_DEST_UNREACH  = 3;     # Destination Unreachable
+my $ICMP_SOURCE_QUENCH = 4;     # Source Quench
+my $ICMP_REDIRECT      = 5;     # Redirect (change route)
+my $ICMP_ECHO          = 8;     # Echo Request
+my $ICMP_TIME_EXCEEDED = 11;    # Time Exceeded
+
+sub new {
+    my ($class, %args) = @_;
+
+    my $interval = $args{interval};
+    $interval = 0.2 unless defined $interval;
+
+    my $timeout = $args{timeout};
+    $timeout = 5 unless defined $timeout;
+
+    my $self = bless {interval => $interval, timeout => $timeout}, $class;
+
+    # Create RAW socket
+    my $socket = IO::Socket::INET->new(
+        Proto    => 'icmp',
+        Type     => SOCK_RAW,
+        Blocking => 0
+    ) or Carp::croak "Unable to create icmp socket : $!";
+
+    $self->{_socket} = $socket;
+
+    # Create Poll object
+    $self->{_poll_read} = AnyEvent->io(
+        fh   => $socket,
+        poll => 'r',
+        cb   => sub { $self->_on_read },
+    );
+
+    # Ping tasks
+    $self->{_tasks}     = [];
+    $self->{_tasks_out} = [];
+
+    return $self;
+}
+
+sub interval { @_ > 2 ? $_[0]->{interval} = $_[1] : $_[0]->{interval} }
+
+sub timeout { @_ > 2 ? $_[0]->{timeout} = $_[1] : $_[0]->{timeout} }
+
+sub error { $_[0]->{error} }
+
+sub ping {
+    my ($self, $host, $times, $cb) = @_;
+
+    my $socket = $self->{_socket};
+
+    my $ip = inet_aton($host);
+
+    my $request = {
+        host        => $host,
+        times       => $times,
+        results     => [],
+        cb          => $cb,
+        identifier  => int(rand 0x10000),
+        destination => scalar sockaddr_in(0, $ip),
+    };
+
+    push @{$self->{_tasks}}, $request;
+
+    push @{$self->{_tasks_out}}, $request;
+
+    $self->_add_write_poll;
+
+    return $self;
+}
+
+sub _add_write_poll {
+    my $self = shift;
+
+    return if exists $self->{_poll_write};
+
+    $self->{_poll_write} = AnyEvent->io(
+        fh   => $self->{_socket},
+        poll => 'w',
+        cb   => sub { $self->_send_requests },
+    );
+}
+
+sub _send_requests {
+    my $self = shift;
+
+    foreach my $request (@{$self->{_tasks_out}}) {
+        $self->_send_request($request);
+    }
+
+    $self->{_tasks_out} = [];
+    delete $self->{_poll_write};
+}
+
+sub _on_read {
+    my $self = shift;
+
+    my $socket = $self->{_socket};
+    $socket->sysread(my $chunk, 4194304, 0);
+
+    my $icmp_msg = substr $chunk, 20;
+
+    my ($type, $identifier, $sequence, $data);
+
+    $type = unpack 'c', $icmp_msg;
+
+    if ($type == $ICMP_ECHOREPLY) {
+        ($type, $identifier, $sequence, $data) =
+          (unpack $ICMP_PING, $icmp_msg)[0, 3, 4, 5];
+    }
+    elsif ($type == $ICMP_DEST_UNREACH || $type == $ICMP_TIME_EXCEEDED) {
+        ($identifier, $sequence) = unpack('nn', substr($chunk, 52));
+    }
+    else {
+
+        # Don't mind
+        return;
+    }
+
+    # Find our task
+    my $request =
+      List::Util::first { $identifier == $_->{identifier} }
+    @{$self->{_tasks}};
+
+    return unless $request;
+
+    # Is it response to our latest message?
+    return unless $sequence == @{$request->{results}} + 1;
+
+    if ($type == $ICMP_ECHOREPLY) {
+
+        # Check data
+        if ($data eq $request->{data}) {
+            $self->_store_result($request, 'OK');
+        }
+        else {
+            $self->_store_result($request, 'MALFORMED');
+        }
+    }
+    elsif ($type == $ICMP_DEST_UNREACH) {
+        $self->_store_result($request, 'DEST_UNREACH');
+    }
+    elsif ($type == $ICMP_TIME_EXCEEDED) {
+        $self->_store_result($request, 'TIMEOUT');
+    }
+}
+
+sub _store_result {
+    my ($self, $request, $result) = @_;
+
+    my $results = $request->{results};
+
+    # Clear request specific data
+    delete $request->{timer};
+
+    push @$results, [$result, time - $request->{start}];
+
+    if (@$results == $request->{times} || $result eq 'ERROR') {
+
+        # Cleanup
+        my $tasks = $self->{_tasks};
+        for my $i (0 .. scalar @$tasks) {
+            if ($tasks->[$i] == $request) {
+                splice @$tasks, $i, 1;
+                last;
+            }
+        }
+
+        # Testing done
+        $request->{cb}->($self, $results);
+
+        undef $request;
+    }
+
+    # Perform another check
+    else {
+
+        # Setup interval timer before next request
+        my $w;
+        $w = AnyEvent->timer(
+            after => $self->interval,
+            cb    => sub {
+                undef $w;
+                push @{$self->{_tasks_out}}, $request;
+                $self->_add_write_poll;
+            }
+        );
+    }
+}
+
+sub _send_request {
+    my ($self, $request) = @_;
+
+    my $checksum   = 0x0000;
+    my $identifier = $request->{identifier};
+    my $sequence   = @{$request->{results}} + 1;
+    my $data       = 'abcdef';
+
+    my $msg = pack $ICMP_PING,
+      $ICMP_ECHO, 0x00, $checksum,
+      $identifier, $sequence, $data;
+
+    $checksum = $self->_icmp_checksum($msg);
+
+    $msg = pack $ICMP_PING,
+      0x08, 0x00, $checksum,
+      $identifier, $sequence, $data;
+
+    $request->{data} = $data;
+
+    $request->{start} = time;
+
+    $request->{timer} = AnyEvent->timer(
+        after => $self->timeout,
+        cb    => sub {
+            $self->_store_result($request, 'TIMEOUT');
+        }
+    );
+
+    my $socket = $self->{_socket};
+
+    $socket->send($msg, 0, $request->{destination}) or die "$!";
+}
+
+sub _icmp_checksum {
+    my ($self, $msg) = @_;
+
+    my $res = 0;
+    foreach my $int (unpack "n*", $msg) {
+        $res += $int;
+    }
+
+    # Add possible odd byte
+    $res += unpack('C', substr($msg, -1, 1)) << 8
+      if length($msg) % 2;
+
+    # Fold high into low
+    $res = ($res >> 16) + ($res & 0xffff);
+
+    # Two times
+    $res = ($res >> 16) + ($res & 0xffff);
+
+    return ~$res;
+}
+
+1;
+__END__
+
+=head1 NAME
+
+AnyEvent::Ping - ping hosts with AnyEvent
+
+=head1 SYNOPSIS
+
+    use AnyEvent;
+    use AnyEvent::Ping;
+
+    my $c = AnyEvent->condvar;
+
+    my $ping = AnyEvent::Ping->new;
+
+    $ping->ping('google.com', 1, sub {
+        my ($ping, $result) = @_;
+        print "Result: ", $result->[0][0],
+          " in ", $result->[0][1], " seconds\n";
+        $c->send;
+    });
+
+    $c->recv;
+
+=head1 DESCRIPTION
+
+L<AnyEvent::Ping> is an asynchronous AnyEvent pinger.
+
+=head1 SEE ALSO
+
+L<AnyEvent>, L<AnyEvent::FastPing>
+
+=head1 AUTHOR
+
+Sergey Zasenko, C<undef@cpan.org>.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2012, Sergey Zasenko
+
+This program is free software, you can redistribute it and/or modify it under
+the terms of the Artistic License version 2.0.
+
+=cut
