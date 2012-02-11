@@ -339,6 +339,6 @@ Sergey Zasenko, C<undef@cpan.org>.
 Copyright (C) 2012, Sergey Zasenko
 
 This program is free software, you can redistribute it and/or modify it under
-the same terms as Perl.
+the same terms as Perl 5.12.
 
 =cut
