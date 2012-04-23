@@ -56,9 +56,9 @@ sub new {
     return $self;
 }
 
-sub interval { @_ > 2 ? $_[0]->{interval} = $_[1] : $_[0]->{interval} }
+sub interval { @_ > 1 ? $_[0]->{interval} = $_[1] : $_[0]->{interval} }
 
-sub timeout { @_ > 2 ? $_[0]->{timeout} = $_[1] : $_[0]->{timeout} }
+sub timeout { @_ > 1 ? $_[0]->{timeout} = $_[1] : $_[0]->{timeout} }
 
 sub error { $_[0]->{error} }
 
