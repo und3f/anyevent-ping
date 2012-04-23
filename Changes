@@ -1,4 +1,7 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.002 2012-02-11 00:00:00
+         - Fixed accessors
+
 0.001 2012-02-11 00:00:00
          - First release
