@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.008_001;
 
-our $VERSION = 0.002;
+our $VERSION = 0.003;
 
 use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
@@ -237,7 +237,8 @@ sub _send_request {
 
     my $socket = $self->{_socket};
 
-    $socket->send($msg, 0, $request->{destination}) or die "$!";
+    $socket->send($msg, 0, $request->{destination}) or
+        $self->_store_result($request, 'ERROR');
 }
 
 sub _icmp_checksum {

@@ -57,4 +57,28 @@ subtest 'check two concurrent ping' => sub {
     done_testing;
 };
 
+subtest 'ping broadcast' => sub {
+    my $result;
+    my $cv = AnyEvent->condvar;
+
+    $ping->ping(
+        '127.255.255.255',
+        2,
+        sub {
+            my $lres = shift;
+
+            $result = $lres;
+
+            $cv->send;
+        }
+    );
+
+    $cv->recv;
+
+    is_deeply $result, [['ERROR', $result->[0][1]]],
+      'error reply on ping 127.255.255.255';
+
+    done_testing;
+};
+
 done_testing;
