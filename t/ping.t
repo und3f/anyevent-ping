@@ -6,6 +6,8 @@ use warnings;
 use Test::More;
 use AnyEvent;
 
+# TODO: determinate local address and broadcast address
+
 plan skip_all => 'You can run tests just as root' if $<;
 
 use_ok 'AnyEvent::Ping';
