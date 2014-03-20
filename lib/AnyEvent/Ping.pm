@@ -40,6 +40,7 @@ sub new {
     ) or Carp::croak "Unable to create icmp socket : $!";
 
     $self->{_socket} = $socket;
+    $self->{_close} = 0;
 
     # Create Poll object
     $self->{_poll_read} = AnyEvent->io(
@@ -86,6 +87,11 @@ sub ping {
     return $self;
 }
 
+sub end {
+    my $self = shift;
+    $self->{_close} = 1;
+}
+
 sub _add_write_poll {
     my $self = shift;
 
@@ -113,6 +119,12 @@ sub _on_read {
     my $self = shift;
 
     my $socket = $self->{_socket};
+    unless ($self->{_close} == 0) {
+        my $socket = $self->{_socket};
+        close $socket;
+        return;
+    }
+
     $socket->sysread(my $chunk, 4194304, 0);
 
     my $icmp_msg = substr $chunk, 20;
