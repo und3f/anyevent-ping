@@ -10,7 +10,6 @@ use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
 use IO::Socket::INET qw/sockaddr_in inet_aton/;
 use List::Util ();
-use AnyEvent::Handle;
 require Carp;
 
 my $ICMP_PING = 'ccnnnA*';
