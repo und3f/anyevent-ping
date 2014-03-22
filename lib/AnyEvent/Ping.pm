@@ -90,6 +90,7 @@ sub ping {
 sub end {
     my $self = shift;
     $self->{_close} = 1;
+    close $self->{_socket};
 }
 
 sub _add_write_poll {
@@ -120,8 +121,7 @@ sub _on_read {
 
     my $socket = $self->{_socket};
     unless ($self->{_close} == 0) {
-        my $socket = $self->{_socket};
-        close $socket;
+        $self->end;
         return;
     }
 
