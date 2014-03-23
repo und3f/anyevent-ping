@@ -1,5 +1,8 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.004 2014-23-03 00:00:00
+         - Fixed socket close after work (qsimpleq)
+
 0.003 2013-29-11 00:00:00
          - Fixed error handling that were caused by broadcast requests
 

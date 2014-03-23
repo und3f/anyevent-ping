@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.008_001;
 
-our $VERSION = 0.003;
+our $VERSION = 0.004;
 
 use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
