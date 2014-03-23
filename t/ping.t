@@ -83,4 +83,6 @@ subtest 'ping broadcast' => sub {
     done_testing;
 };
 
+$ping->end;
+
 done_testing;

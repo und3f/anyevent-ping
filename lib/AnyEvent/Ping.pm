@@ -40,7 +40,6 @@ sub new {
     ) or Carp::croak "Unable to create icmp socket : $!";
 
     $self->{_socket} = $socket;
-    $self->{_close} = 0;
 
     # Create Poll object
     $self->{_poll_read} = AnyEvent->io(
@@ -89,8 +88,12 @@ sub ping {
 
 sub end {
     my $self = shift;
-    $self->{_close} = 1;
-    close $self->{_socket};
+
+    delete $self->{_poll_read};
+    delete $self->{_poll_write};
+
+    close delete $self->{_socket}
+        if exists $self->{_socket};
 }
 
 sub _add_write_poll {
@@ -120,11 +123,6 @@ sub _on_read {
     my $self = shift;
 
     my $socket = $self->{_socket};
-    unless ($self->{_close} == 0) {
-        $self->end;
-        return;
-    }
-
     $socket->sysread(my $chunk, 4194304, 0);
 
     my $icmp_msg = substr $chunk, 20;
@@ -297,6 +295,7 @@ AnyEvent::Ping - ping hosts with AnyEvent
     });
 
     $c->recv;
+    $ping->end;
 
 =head1 DESCRIPTION
 
@@ -338,6 +337,12 @@ L<AnyEvent::Ping> implements the following methods.
 
 Perform a ping of a given $ip address $n times.
 
+=head2 C<end>
+
+    $ping->end;
+
+Ends all pings and releases resources.
+
 =head1 SEE ALSO
 
 L<AnyEvent>, L<AnyEvent::FastPing>
@@ -346,9 +351,13 @@ L<AnyEvent>, L<AnyEvent::FastPing>
 
 Sergey Zasenko, C<undef@cpan.org>.
 
+=head1 CREDITS
+
+Kirill (qsimpleq)
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012, Sergey Zasenko
+Copyright (C) 2012-2014, Sergey Zasenko
 
 This program is free software, you can redistribute it and/or modify it under
 the same terms as Perl 5.12.
