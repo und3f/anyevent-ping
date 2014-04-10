@@ -53,6 +53,27 @@ Last error message.
 
 L<AnyEvent::Ping> implements the following methods.
 
+=head2 C<new>
+
+    my $ping = AnyEvent::Ping->new(%options)
+
+Constructs AnyEvent::Ping object. Following options can be passed:
+
+=head3 C<interval>
+
+=head3 C<timeout>
+
+=head3 C<on_prepare>
+
+In some cases you need to "tune" the socket before it is used to ping (for
+exmaple, to bind it on a given IP address).
+
+    my $ping = AnyEvent::Ping->new(
+        on_prepare => sub {
+            my $socket = shift;
+            ...
+    });
+
 =head2 C<ping>
 
     $ping->ping($ip, $n => sub {

@@ -41,6 +41,10 @@ sub new {
 
     $self->{_socket} = $socket;
 
+    if (my $on_prepare = $args{on_prepare}) {
+        $on_prepare->($socket);
+    }
+
     # Create Poll object
     $self->{_poll_read} = AnyEvent->io(
         fh   => $socket,
@@ -328,6 +332,27 @@ Last error message.
 =head1 METHODS
 
 L<AnyEvent::Ping> implements the following methods.
+
+=head2 C<new>
+
+    my $ping = AnyEvent::Ping->new(%options)
+
+Constructs AnyEvent::Ping object. Following options can be passed:
+
+=head3 C<interval>
+
+=head3 C<timeout>
+
+=head3 C<on_prepare>
+
+In some cases you need to "tune" the socket before it is used to ping (for
+exmaple, to bind it on a given IP address).
+
+    my $ping = AnyEvent::Ping->new(
+        on_prepare => sub {
+            my $socket = shift;
+            ...
+    });
 
 =head2 C<ping>
 
