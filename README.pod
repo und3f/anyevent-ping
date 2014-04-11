@@ -74,6 +74,27 @@ exmaple, to bind it on a given IP address).
             ...
     });
 
+=head3 C<packet_generator>
+
+Generates the data to be sent.
+
+    my $ping = AnyEvent::Ping->new(
+        packet_generator => sub {
+            &AnyEvent::Ping::generate_data_random($packet_size);
+    });
+
+=head3 C<packet_size>
+
+You can set the number of data bytes to be sent, if packet generation function
+is not set. The default is 54, which translates into 64 ICMP data bytes when
+combined with the 8 bytes of ICMP header data.
+
+    my $ping = AnyEvent::Ping->new(packet_size => 54);
+
+Each packet will be generated with generate_data_random() like this:
+
+    &AnyEvent::Ping::generate_data_random($packet_size);
+
 =head2 C<ping>
 
     $ping->ping($ip, $n => sub {

@@ -91,6 +91,13 @@ subtest 'preparation socket' => sub {
     isa_ok($preparation_socket, 'IO::Socket');
 };
 
+subtest 'data generation' => sub {
+    my $size = 20;
+    my $data = AnyEvent::Ping::generate_data_random(20);
+
+    is length($data), $size, 'random data generated right size';
+};
+
 $ping->end;
 
 done_testing;
