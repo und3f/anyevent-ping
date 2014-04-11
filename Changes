@@ -1,5 +1,10 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.005 2014-11-04 00:00:00
+         - control packet size and data
+         - default packet size changed to 54
+         - on_prepare to "tune" the socket
+
 0.004 2014-23-03 00:00:00
          - Fixed socket close after work (qsimpleq)
 
