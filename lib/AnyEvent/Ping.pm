@@ -318,9 +318,9 @@ AnyEvent::Ping - ping hosts with AnyEvent
     my $ping = AnyEvent::Ping->new;
 
     $ping->ping('google.com', 1, sub {
-        my $result = shift;
-        print "Result: ", $result->[0][0],
-          " in ", $result->[0][1], " seconds\n";
+        my $results = shift;
+        print "Result: ", $results->[0][0],
+          " in ", $results->[0][1], " seconds\n";
         $c->send;
     });
 
@@ -404,7 +404,12 @@ Each packet will be generated with generate_data_random() like this:
 =head2 C<ping>
 
     $ping->ping($ip, $n => sub {
-        my $result = shift;
+        my $results = shift;
+
+        foreach my $result (@$results){
+            my ($status, $time) = @$result;
+            ...
+        };
     });
 
 Perform a ping of a given $ip address $n times.
