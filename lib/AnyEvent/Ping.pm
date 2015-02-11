@@ -12,7 +12,7 @@ use IO::Socket::INET qw/sockaddr_in inet_aton/;
 use List::Util ();
 require Carp;
 
-my $ICMP_PING = 'ccnnnA*';
+my $ICMP_PING = 'ccnnna*';
 
 my $ICMP_ECHOREPLY     = 0;     # Echo Reply
 my $ICMP_DEST_UNREACH  = 3;     # Destination Unreachable
