@@ -400,10 +400,10 @@ Generates the data to be sent.
 =head3 C<packet_size>
 
 You can set the number of data bytes to be sent, if packet generation function
-is not set. The default is 54, which translates into 64 ICMP data bytes when
+is not set. The default is 56, which translates into 64 ICMP data bytes when
 combined with the 8 bytes of ICMP header data.
 
-    my $ping = AnyEvent::Ping->new(packet_size => 54);
+    my $ping = AnyEvent::Ping->new(packet_size => 56);
 
 Each packet will be generated with generate_data_random() like this:
 
