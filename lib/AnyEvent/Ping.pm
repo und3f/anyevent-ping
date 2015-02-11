@@ -313,14 +313,17 @@ AnyEvent::Ping - ping hosts with AnyEvent
     use AnyEvent;
     use AnyEvent::Ping;
 
+    my $times = shift || 4;
     my $c = AnyEvent->condvar;
 
     my $ping = AnyEvent::Ping->new;
 
-    $ping->ping('google.com', 1, sub {
+    $ping->ping('google.com', $times, sub {
         my $results = shift;
-        print "Result: ", $results->[0][0],
-          " in ", $results->[0][1], " seconds\n";
+        foreach my $result (@$results) {
+            print "Result: ", $result->[0],
+            " in ", $result->[1], " seconds\n";
+        };
         $c->send;
     });
 
