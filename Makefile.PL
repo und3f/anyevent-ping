@@ -2,6 +2,7 @@ use inc::Module::Install;
 
 name 'AnyEvent-Ping';
 all_from 'lib/AnyEvent/Ping.pm';
+install_script 'ping.pl';
 
 requires 'AnyEvent';
 requires 'Carp';
