@@ -80,8 +80,14 @@ subtest 'ping broadcast' => sub {
 
     $cv->recv;
 
-    is_deeply $result, [['ERROR', $result->[0][1]]],
-      'error reply on ping 127.255.255.255';
+    if ( $^O ne 'MSWin32' ){
+        is_deeply $result, [['ERROR', $result->[0][1]]],
+            'error reply on ping 127.255.255.255';
+    }
+    else{
+        is $result->[0][0], 'TIMEOUT', 
+            '[Win32] timeout reply on ping 127.255.255.255';
+    }
 
     done_testing;
 };
