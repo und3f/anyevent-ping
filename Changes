@@ -1,5 +1,8 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.008 2015-03-17 00:00:00
+         - make test pass on Win32 system (sdeseille)
+
 0.007 2015-02-11 00:00:00
          - fixed malformed issue
          - ping.pl script

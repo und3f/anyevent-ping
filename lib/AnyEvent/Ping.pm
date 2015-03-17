@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.008_001;
 
-our $VERSION = 0.007;
+our $VERSION = 0.008;
 
 use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
@@ -439,6 +439,8 @@ Sergey Zasenko, C<undef@cpan.org>.
 =head1 CREDITS
 
 Kirill (qsimpleq)
+
+Sebastien Deseille (sdeseille)
 
 =head1 COPYRIGHT AND LICENSE
 

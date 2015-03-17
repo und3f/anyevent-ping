@@ -134,6 +134,8 @@ Sergey Zasenko, C<undef@cpan.org>.
 
 Kirill (qsimpleq)
 
+Sebastien Deseille (sdeseille)
+
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2012-2014, Sergey Zasenko
