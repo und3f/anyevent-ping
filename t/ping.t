@@ -92,6 +92,33 @@ subtest 'ping broadcast' => sub {
     done_testing;
 };
 
+subtest 'force end' => sub {
+    my $ping = new_ok 'AnyEvent::Ping';
+    my $cv = AnyEvent->condvar;
+
+    my $long_times = 1000;
+    my $long_ping_result;
+
+    my $short_ping_cb = sub {
+        ok not(defined($long_ping_result)), 'long ping is still performing'; 
+        $cv->send;
+        $ping->end;
+    };
+    my $long_ping_cb = sub {
+        $long_ping_result = shift;
+    };
+
+    $ping->ping('127.0.0.1', 4,    $short_ping_cb);
+    $ping->ping('127.0.0.1', $long_times, $long_ping_cb);
+
+    $cv->recv;
+
+    is $long_ping_result->[0][0], 'OK', 'unfinished data returned';
+    ok scalar(@$long_ping_result) < $long_times, 'unifinished data is unfinished';
+
+    done_testing;
+};
+
 subtest 'preparation socket' => sub {
     our $preparation_socket;
     isa_ok($preparation_socket, 'IO::Socket');

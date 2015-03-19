@@ -1,5 +1,8 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.009 2015-03-19 00:00:00
+         - end() now forces the end of unfinished pings
+
 0.008 2015-03-17 00:00:00
          - make test pass on Win32 system (sdeseille)
 

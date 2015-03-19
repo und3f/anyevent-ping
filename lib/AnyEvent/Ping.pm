@@ -69,6 +69,7 @@ sub new {
     # Ping tasks
     $self->{_tasks}     = [];
     $self->{_tasks_out} = [];
+    $self->{_timers}    = {};
 
     return $self;
 }
@@ -109,6 +110,11 @@ sub end {
 
     delete $self->{_poll_read};
     delete $self->{_poll_write};
+    delete $self->{_timers};
+
+    while (my $request = pop @{$self->{_tasks}}) {
+        $request->{cb}->($request->{results});
+    }
 
     close delete $self->{_socket}
         if exists $self->{_socket};
@@ -208,7 +214,7 @@ sub _store_result {
     my $results = $request->{results};
 
     # Clear request specific data
-    delete $request->{timer};
+    delete $self->{_timers}->{$request};
 
     push @$results, [$result, time - $request->{start}];
 
@@ -233,11 +239,10 @@ sub _store_result {
     else {
 
         # Setup interval timer before next request
-        my $w;
-        $w = AnyEvent->timer(
+        $self->{_timers}{$request} = AnyEvent->timer(
             after => $self->interval,
             cb    => sub {
-                undef $w;
+                delete $self->{_timers}{$request};
                 push @{$self->{_tasks_out}}, $request;
                 $self->_add_write_poll;
             }
@@ -267,7 +272,7 @@ sub _send_request {
 
     $request->{start} = time;
 
-    $request->{timer} = AnyEvent->timer(
+    $self->{_timers}->{$request}->{timer} = AnyEvent->timer(
         after => $self->timeout,
         cb    => sub {
             $self->_store_result($request, 'TIMEOUT');
