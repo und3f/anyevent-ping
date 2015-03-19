@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use 5.008_001;
 
-our $VERSION = 0.008;
+our $VERSION = 0.009;
 
 use Socket qw/SOCK_RAW/;
 use Time::HiRes 'time';
@@ -449,7 +449,7 @@ Sebastien Deseille (sdeseille)
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012-2014, Sergey Zasenko
+Copyright (C) 2012-2015, Sergey Zasenko
 
 This program is free software, you can redistribute it and/or modify it under
 the same terms as Perl 5.12.
