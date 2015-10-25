@@ -5,3 +5,5 @@
 ^\.git
 ^.perltidyrc
 README.pod
+MYMETA.*
+MANIFEST.bak
