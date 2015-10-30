@@ -1,5 +1,8 @@
 This file documents the revision history for Perl extension AnyEvent::Ping
 
+0.011 2015-10-30 00:00:00
+         - Removed experimental commit that broke everything
+
 0.010 2015-10-25 00:00:00
          - MYMETA.yml and MYMETA.json removed from distribution
             as suggested by Alexandr Ciornii
