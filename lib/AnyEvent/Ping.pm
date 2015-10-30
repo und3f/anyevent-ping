@@ -46,7 +46,12 @@ sub new {
         packet_generator => $packet_generator
     }, $class;
 
-    my $socket = $self->_create_socket();
+    # Create RAW socket
+    my $socket = IO::Socket::INET->new(
+        Proto    => 'icmp',
+        Type     => SOCK_RAW,
+        Blocking => 0
+    ) or Carp::croak "Unable to create icmp socket : $!";
 
     $self->{_socket} = $socket;
 
@@ -67,16 +72,6 @@ sub new {
     $self->{_timers}    = {};
 
     return $self;
-}
-
-sub _create_socket {
-    my $self = shift;
-
-    IO::Socket::INET->new(
-        Proto    => 'icmp',
-        Type     => SOCK_RAW,
-        Blocking => 0
-    ) or Carp::croak "Unable to create icmp socket : $!";
 }
 
 sub interval { @_ > 1 ? $_[0]->{interval} = $_[1] : $_[0]->{interval} }
@@ -166,30 +161,6 @@ sub _on_read {
     my $socket = $self->{_socket};
     $socket->sysread(my $chunk, 4194304, 0);
 
-    my ($request, $type, $data) = $self->_process_chunk($chunk);
-    return unless $request;
-
-    if ($type == $ICMP_ECHOREPLY) {
-
-        # Check data
-        if ($data eq $request->{data}) {
-            $self->_store_result($request, 'OK');
-        }
-        else {
-            $self->_store_result($request, 'MALFORMED');
-        }
-    }
-    elsif ($type == $ICMP_DEST_UNREACH) {
-        $self->_store_result($request, 'DEST_UNREACH');
-    }
-    elsif ($type == $ICMP_TIME_EXCEEDED) {
-        $self->_store_result($request, 'TIMEOUT');
-    }
-}
-
-sub _process_chunk_to_request {
-    my ($self, $chunk) = @_;
-
     my $icmp_msg = substr $chunk, 20;
 
     my ($type, $identifier, $sequence, $data);
@@ -219,6 +190,22 @@ sub _process_chunk_to_request {
     # Is it response to our latest message?
     return unless $sequence == @{$request->{results}} + 1;
 
+    if ($type == $ICMP_ECHOREPLY) {
+
+        # Check data
+        if ($data eq $request->{data}) {
+            $self->_store_result($request, 'OK');
+        }
+        else {
+            $self->_store_result($request, 'MALFORMED');
+        }
+    }
+    elsif ($type == $ICMP_DEST_UNREACH) {
+        $self->_store_result($request, 'DEST_UNREACH');
+    }
+    elsif ($type == $ICMP_TIME_EXCEEDED) {
+        $self->_store_result($request, 'TIMEOUT');
+    }
 }
 
 sub _store_result {
